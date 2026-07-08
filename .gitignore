@@ -1,0 +1,21 @@
+# Environment / secrets
+.env
+
+# Virtual environment
+venv/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Generated data (rebuilt by ingest.py)
+vectorstore/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/

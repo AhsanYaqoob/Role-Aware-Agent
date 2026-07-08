@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(py *)",
+      "PowerShell(.\\\\venv\\\\Scripts\\\\python.exe ingest.py)",
+      "PowerShell(.\\\\venv\\\\Scripts\\\\pip.exe index versions langchain-faiss 2>&1)",
+      "WebSearch",
+      "PowerShell(.\\\\venv\\\\Scripts\\\\pip.exe install langchain-huggingface langchain-faiss 2>&1 | Select-Object -Last 15)",
+      "PowerShell(.\\\\venv\\\\Scripts\\\\python.exe -c \"import langchain_huggingface; print\\('HF exports:', [n for n in dir\\(langchain_huggingface\\) if not n.startswith\\('_'\\)]\\)\")",
+      "PowerShell(.\\\\venv\\\\Scripts\\\\python.exe -c \"import langchain_faiss; print\\('FAISS pkg exports:', [n for n in dir\\(langchain_faiss\\) if not n.startswith\\('_'\\)]\\)\")",
+      "PowerShell(.\\\\venv\\\\Scripts\\\\python.exe -c \"from langchain.document_loaders import TextLoader; print\\('langchain.document_loaders.TextLoader OK'\\)\" 2>&1)",
+      "PowerShell(.\\\\venv\\\\Scripts\\\\pip.exe uninstall -y langchain-faiss 2>&1 | Select-Object -Last 10)",
+      "Bash(timeout 30 bash -c 'until curl -sf http://127.0.0.1:8000/ >/dev/null 2>&1; do sleep 1; done')",
+      "Read(//c/Users/AHSAN/AppData/Local/Temp/claude/D--My-Folder-Projects-role-aware-agent/a49b41dd-a2b8-467b-b963-e9d67760f231/scratchpad/**)",
+      "Bash(node drive_ui3.js)",
+      "Bash(/d/My Folder/Projects/role-aware-agent/venv/Scripts/python.exe *)",
+      "Bash(curl -s -o /dev/null -w \"HTTP status: %{http_code}\\\\n\" --max-time 5 http://127.0.0.1:8000/)"
+    ]
+  }
+}

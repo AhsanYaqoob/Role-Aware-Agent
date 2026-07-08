@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Role-Aware Knowledge Agent</title>
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --sidebar-bg: #0d1220;
+    --panel-bg: #10162280;
+    --card-bg: #141b2d;
+    --bubble-assistant: #141b2d;
+    --border: #232d42;
+    --text: #e7ebf3;
+    --text-muted: #8b98ac;
+    --accent: #4f8cff;
+    --accent-hover: #6ea1ff;
+    --success: #2dd4bf;
+    --error: #f87171;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    background: var(--bg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--text);
+  }
+
+  .app-shell {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  /* --- Sidebar (fixed, full height, never scrolls) --- */
+  .sidebar {
+    width: 240px;
+    flex-shrink: 0;
+    height: 100%;
+    background: var(--sidebar-bg);
+    border-right: 1px solid var(--border);
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+  }
+  .sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 28px;
+    padding: 0 4px;
+  }
+  .brand-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, var(--accent), #7c5cff);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.8rem;
+    color: white;
+    flex-shrink: 0;
+  }
+  .brand-name {
+    font-size: 0.95rem;
+    font-weight: 600;
+  }
+  .sidebar-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+    padding: 0 4px;
+  }
+  .role-select {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--card-bg);
+    color: var(--text);
+    font-size: 0.9rem;
+    font-family: inherit;
+    cursor: pointer;
+    transition: border-color 0.15s ease;
+  }
+  .role-select:hover {
+    border-color: rgba(79, 140, 255, 0.5);
+  }
+  .role-select:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  .sidebar-spacer {
+    flex: 1;
+    /* reserved for future use */
+  }
+
+  /* --- Chat panel --- */
+  .chat-panel {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+  .chat-header {
+    flex-shrink: 0;
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+  .chat-header h1 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 600;
+  }
+  .chat-header p {
+    margin: 2px 0 0;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+  }
+
+  .messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px 24px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+  .messages::-webkit-scrollbar { width: 8px; }
+  .messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 8px; }
+
+  .message-row {
+    display: flex;
+    width: 100%;
+    max-width: 760px;
+    margin: 0 auto;
+  }
+  .message-row.user { justify-content: flex-end; }
+  .message-row.assistant { justify-content: flex-start; }
+
+  .message-bubble.user {
+    background: var(--accent);
+    color: white;
+    padding: 11px 16px;
+    border-radius: 18px 18px 4px 18px;
+    max-width: 75%;
+    white-space: pre-wrap;
+    line-height: 1.5;
+    font-size: 0.95rem;
+  }
+  .message-bubble.assistant {
+    background: var(--bubble-assistant);
+    border: 1px solid var(--border);
+    padding: 14px 16px;
+    border-radius: 4px 18px 18px 18px;
+    max-width: 100%;
+    width: 100%;
+  }
+  .answer-role {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--success);
+    background: rgba(45, 212, 191, 0.1);
+    padding: 3px 9px;
+    border-radius: 999px;
+    margin-bottom: 10px;
+  }
+  .answer-role.error {
+    color: var(--error);
+    background: rgba(248, 113, 113, 0.1);
+  }
+  .answer-text {
+    white-space: pre-wrap;
+    line-height: 1.6;
+    font-size: 0.95rem;
+    color: var(--text);
+  }
+  .typing-cursor {
+    display: inline-block;
+    width: 2px;
+    height: 1em;
+    background: var(--text);
+    margin-left: 2px;
+    vertical-align: text-bottom;
+    animation: blink 0.8s steps(1) infinite;
+  }
+  @keyframes blink {
+    50% { opacity: 0; }
+  }
+
+  .thinking-dots {
+    display: flex;
+    gap: 4px;
+    padding: 4px 0;
+  }
+  .thinking-dots span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    animation: bounce 1.2s infinite ease-in-out;
+  }
+  .thinking-dots span:nth-child(2) { animation-delay: 0.15s; }
+  .thinking-dots span:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes bounce {
+    0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+    40% { transform: translateY(-5px); opacity: 1; }
+  }
+
+  /* --- Empty state --- */
+  .empty-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 24px;
+    color: var(--text-muted);
+  }
+  .empty-state svg { color: var(--accent); margin-bottom: 14px; }
+  .empty-state h2 {
+    margin: 0 0 6px;
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .empty-state p {
+    margin: 0 0 22px;
+    font-size: 0.9rem;
+  }
+  .suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    max-width: 520px;
+  }
+  .suggestion-chip {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 0.83rem;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  .suggestion-chip:hover {
+    border-color: var(--accent);
+    background: rgba(79, 140, 255, 0.08);
+  }
+
+  /* --- Input bar (stuck to the bottom) --- */
+  .input-bar {
+    flex-shrink: 0;
+    padding: 12px 24px 20px;
+  }
+  .input-inner {
+    max-width: 760px;
+    margin: 0 auto;
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    padding: 8px 8px 8px 18px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  }
+  .input-inner textarea {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    resize: none;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 0.95rem;
+    line-height: 1.4;
+    max-height: 160px;
+    min-height: 24px;
+    padding: 8px 0;
+  }
+  .input-inner textarea::placeholder { color: var(--text-muted); }
+
+  .send-btn {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: var(--accent);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.1s ease;
+  }
+  .send-btn:hover:not(:disabled) { background: var(--accent-hover); }
+  .send-btn:active:not(:disabled) { transform: scale(0.94); }
+  .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .input-hint {
+    max-width: 760px;
+    margin: 6px auto 0;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    text-align: center;
+  }
+
+  @media (max-width: 720px) {
+    .sidebar {
+      width: 76px;
+      padding: 16px 8px;
+    }
+    .brand-name { display: none; }
+    .sidebar-brand { justify-content: center; }
+    .sidebar-label { display: none; }
+    .role-select { font-size: 0.7rem; padding: 8px 4px; }
+  }
+</style>
+</head>
+<body>
+  <div class="app-shell">
+    <div class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-icon">RA</div>
+        <div class="brand-name">Role-Aware Agent</div>
+      </div>
+      <div class="sidebar-label">Role</div>
+      <select class="role-select" id="role-select">
+        <option value="Intern">Intern</option>
+        <option value="Engineer">Engineer</option>
+        <option value="Manager">Manager</option>
+      </select>
+      <div class="sidebar-spacer"></div>
+    </div>
+
+    <div class="chat-panel">
+      <div class="chat-header">
+        <h1>Role-Aware Knowledge Agent</h1>
+        <p>Ask a question and get an answer tailored to your role.</p>
+      </div>
+
+      <div class="empty-state" id="empty-state">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
+        <h2>Start a conversation</h2>
+        <p>Pick a role on the left, then ask anything about the company.</p>
+        <div class="suggestions">
+          <button type="button" class="suggestion-chip" data-q="How many days of annual leave do employees get?">Leave policy</button>
+          <button type="button" class="suggestion-chip" data-q="What tech stack does the backend use?">Tech stack</button>
+          <button type="button" class="suggestion-chip" data-q="What are the Q2 product goals?">Roadmap</button>
+          <button type="button" class="suggestion-chip" data-q="What is the FY2026 revenue target?">Finance</button>
+        </div>
+      </div>
+
+      <div class="messages" id="messages" style="display: none;"></div>
+
+      <div class="input-bar">
+        <form id="ask-form" class="input-inner">
+          <textarea id="question" name="question" placeholder="Message Role-Aware Agent..." rows="1" required></textarea>
+          <button type="submit" class="send-btn" id="submit-btn" disabled>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="19" x2="12" y2="5"></line>
+              <polyline points="5 12 12 5 19 12"></polyline>
+            </svg>
+          </button>
+        </form>
+        <div class="input-hint">Enter to send &middot; Shift+Enter for a new line</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('ask-form');
+    const questionInput = document.getElementById('question');
+    const roleSelect = document.getElementById('role-select');
+    const submitBtn = document.getElementById('submit-btn');
+    const messagesEl = document.getElementById('messages');
+    const emptyState = document.getElementById('empty-state');
+
+    let busy = false;
+
+    function autoResize() {
+      questionInput.style.height = 'auto';
+      questionInput.style.height = Math.min(questionInput.scrollHeight, 160) + 'px';
+    }
+    questionInput.addEventListener('input', () => {
+      autoResize();
+      submitBtn.disabled = busy || questionInput.value.trim().length === 0;
+    });
+    questionInput.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        form.requestSubmit();
+      }
+    });
+
+    document.querySelectorAll('.suggestion-chip').forEach((chip) => {
+      chip.addEventListener('click', () => {
+        questionInput.value = chip.dataset.q;
+        autoResize();
+        submitBtn.disabled = false;
+        form.requestSubmit();
+      });
+    });
+
+    function isNearBottom() {
+      return messagesEl.scrollHeight - messagesEl.scrollTop - messagesEl.clientHeight < 120;
+    }
+    function scrollToBottom() {
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function showChatView() {
+      if (emptyState.style.display !== 'none') {
+        emptyState.style.display = 'none';
+        messagesEl.style.display = 'flex';
+      }
+    }
+
+    function addUserMessage(text) {
+      showChatView();
+      const row = document.createElement('div');
+      row.className = 'message-row user';
+      const bubble = document.createElement('div');
+      bubble.className = 'message-bubble user';
+      bubble.textContent = text;
+      row.appendChild(bubble);
+      messagesEl.appendChild(row);
+      scrollToBottom();
+    }
+
+    function addAssistantPlaceholder(role) {
+      const row = document.createElement('div');
+      row.className = 'message-row assistant';
+      const bubble = document.createElement('div');
+      bubble.className = 'message-bubble assistant';
+
+      const badge = document.createElement('span');
+      badge.className = 'answer-role';
+      badge.textContent = 'Answered as: ' + role;
+
+      const textEl = document.createElement('div');
+      textEl.className = 'answer-text';
+      textEl.innerHTML = '<div class="thinking-dots"><span></span><span></span><span></span></div>';
+
+      bubble.appendChild(badge);
+      bubble.appendChild(textEl);
+      row.appendChild(bubble);
+      messagesEl.appendChild(row);
+      scrollToBottom();
+      return { badge, textEl };
+    }
+
+    function escapeHtml(text) {
+      return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+    function formatAnswer(text) {
+      return escapeHtml(text).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    }
+
+    function typeAnswer(textEl, fullText) {
+      let shown = 0;
+      const chunkSize = 3;
+      const timer = setInterval(() => {
+        shown += chunkSize;
+        const done = shown >= fullText.length;
+        const partial = done ? fullText : fullText.slice(0, shown);
+        const stickToBottom = isNearBottom();
+        textEl.innerHTML = formatAnswer(partial) + (done ? '' : '<span class="typing-cursor"></span>');
+        if (stickToBottom) scrollToBottom();
+        if (done) clearInterval(timer);
+      }, 15);
+    }
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (busy) return;
+
+      const question = questionInput.value.trim();
+      const role = roleSelect.value;
+      if (!question) return;
+
+      addUserMessage(question);
+      questionInput.value = '';
+      autoResize();
+
+      busy = true;
+      submitBtn.disabled = true;
+      const { badge, textEl } = addAssistantPlaceholder(role);
+
+      try {
+        const formData = new FormData();
+        formData.append('question', question);
+        formData.append('role', role);
+
+        const response = await fetch('/ask', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          throw new Error('Server responded with status ' + response.status);
+        }
+
+        const data = await response.json();
+        typeAnswer(textEl, data.answer);
+      } catch (err) {
+        badge.textContent = 'Error';
+        badge.classList.add('error');
+        textEl.textContent = 'Something went wrong: ' + err.message;
+        scrollToBottom();
+      } finally {
+        busy = false;
+        submitBtn.disabled = questionInput.value.trim().length === 0;
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,78 @@
+BRIGHTWAVE TECHNOLOGIES INC.
+SOFTWARE ENGINEERING ARCHITECTURE DOCUMENT
+Version: 3.2
+Document Owner: Platform Engineering Team
+
+1. OVERVIEW
+
+This document describes the technical architecture of the Brightwave platform, a multi-tenant SaaS product for supply chain analytics. It covers system design, technology stack, API structure, and deployment practices. It is intended for engineers onboarding onto the platform team and for cross-functional stakeholders who need architectural context.
+
+2. SYSTEM DESIGN
+
+2.1 Architectural Style
+The platform follows a microservices architecture composed of 14 independently deployable services, communicating primarily through asynchronous events over a message broker, with synchronous REST calls used for read-heavy, latency-sensitive paths.
+
+2.2 Core Services
+- Ingestion Service: receives raw supply chain data from customer integrations (EDI, CSV uploads, partner APIs).
+- Normalization Service: transforms heterogeneous input formats into the internal canonical schema.
+- Analytics Engine: computes forecasts, anomaly detection, and inventory optimization using batch and streaming pipelines.
+- Notification Service: dispatches alerts via email, Slack, and webhook integrations.
+- Billing Service: tracks usage-based billing metrics and integrates with Stripe.
+- Auth Service: issues and validates JWT tokens, manages tenant-level role-based access control.
+
+2.3 Data Flow
+Customer data enters through the Ingestion Service, is validated and normalized, then published to a Kafka topic. Downstream services (Analytics Engine, Notification Service) subscribe to relevant topics and process events independently, enabling horizontal scaling and fault isolation. Processed results are persisted to PostgreSQL for transactional queries and to a columnar data warehouse (Snowflake) for analytical queries.
+
+2.4 Multi-Tenancy Model
+The platform uses a hybrid multi-tenancy model: shared application infrastructure with tenant isolation enforced at the database row level via a tenant_id column and row-level security policies. Enterprise customers on the highest pricing tier may opt into dedicated database instances.
+
+3. TECH STACK
+
+3.1 Backend
+Primary backend services are written in Python (FastAPI) and Go, chosen respectively for rapid development of data-processing services and for performance-critical services like the Auth Service and API Gateway.
+
+3.2 Frontend
+The customer-facing web application is built with React and TypeScript, using Next.js for server-side rendering and Tailwind CSS for styling.
+
+3.3 Data Stores
+- PostgreSQL: primary transactional datastore.
+- Redis: caching layer and rate-limiting counters.
+- Kafka: event streaming backbone between services.
+- Snowflake: analytical data warehouse for reporting and BI dashboards.
+- S3-compatible object storage: raw file uploads and data lake storage.
+
+3.4 Machine Learning
+Forecasting models are built with Python using scikit-learn and PyTorch, orchestrated through internal ML pipelines, with model artifacts versioned and served via a dedicated inference service.
+
+4. API STRUCTURE
+
+4.1 REST Conventions
+All public APIs follow REST conventions under the base path /api/v1/. Resources are pluralized nouns (e.g., /api/v1/shipments), and standard HTTP verbs (GET, POST, PUT, PATCH, DELETE) map to standard CRUD operations.
+
+4.2 Versioning
+API versions are specified in the URL path (v1, v2). Breaking changes require a new version; the platform supports a minimum of two concurrent major versions to give customers time to migrate.
+
+4.3 Authentication
+All API requests require a Bearer JWT token issued by the Auth Service. Tokens are short-lived (15 minutes) and refreshed using a rotating refresh token stored in an HttpOnly cookie.
+
+4.4 Rate Limiting
+API consumers are rate-limited based on their subscription tier: 100 requests/minute for Starter, 1,000 requests/minute for Professional, and custom limits for Enterprise, enforced via Redis-backed token buckets at the API Gateway.
+
+5. DEPLOYMENT
+
+5.1 CI/CD Pipeline
+Code changes go through GitHub Actions pipelines: automated tests, linting, security scanning (Snyk), and container image builds. Merges to main automatically deploy to a staging environment; production deploys require manual approval from a tech lead.
+
+5.2 Environments
+The platform maintains three environments: development, staging, and production, each running in isolated Kubernetes clusters on AWS (EKS).
+
+5.3 Containerization and Orchestration
+All services are containerized with Docker and orchestrated with Kubernetes. Helm charts define deployment configuration, and Argo CD manages GitOps-based continuous delivery to the clusters.
+
+5.4 Monitoring and Observability
+The platform uses Prometheus and Grafana for metrics, Datadog for distributed tracing and log aggregation, and PagerDuty for on-call alerting. Service-level objectives (SLOs) target 99.9% uptime for core APIs.
+
+5.5 Disaster Recovery
+Databases are backed up continuously with point-in-time recovery enabled. Cross-region replication is in place for production PostgreSQL and S3 data, with a documented RTO of 1 hour and RPO of 5 minutes.
+
+For architecture questions or proposed changes, submit an RFC to the #platform-architecture channel.

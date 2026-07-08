@@ -1,0 +1,78 @@
+BRIGHTWAVE TECHNOLOGIES INC.
+HUMAN RESOURCES POLICY HANDBOOK
+Effective Date: January 1, 2026
+Document Owner: People Operations Department
+
+1. INTRODUCTION
+
+This handbook outlines the human resources policies that govern employment at Brightwave Technologies Inc. ("the Company"). It applies to all full-time, part-time, and contract employees unless otherwise stated. Employees are expected to read, understand, and comply with these policies. Managers are responsible for ensuring their teams are familiar with these guidelines.
+
+2. LEAVE POLICY
+
+2.1 Annual Leave
+Full-time employees accrue 18 days of paid annual leave per calendar year, credited at a rate of 1.5 days per month of service. Unused annual leave may be carried forward up to a maximum of 10 days into the following year; any balance beyond that is forfeited unless local law requires payout.
+
+2.2 Sick Leave
+Employees are entitled to 10 paid sick days per year. A medical certificate is required for absences exceeding 2 consecutive days. Sick leave does not carry forward to the next calendar year.
+
+2.3 Casual Leave
+Employees may take up to 6 casual leave days per year for personal matters, subject to manager approval with at least 24 hours' notice where possible.
+
+2.4 Maternity and Paternity Leave
+Primary caregivers are eligible for 26 weeks of paid maternity leave. Secondary caregivers are eligible for 4 weeks of paid paternity leave. Both must be taken within 12 months of the child's birth or adoption.
+
+2.5 Bereavement Leave
+Employees may take up to 5 paid days of bereavement leave for the death of an immediate family member, and 2 days for extended family.
+
+2.6 Leave Request Process
+All leave requests must be submitted through the HR portal at least 3 business days in advance, except in emergencies. Manager approval is required before leave is confirmed.
+
+3. WORK HOURS
+
+3.1 Standard Hours
+Standard working hours are Monday to Friday, 9:00 AM to 6:00 PM local time, inclusive of a 1-hour unpaid lunch break, totaling 40 hours per week.
+
+3.2 Flexible Work Arrangements
+Employees may request flexible start times between 7:30 AM and 10:00 AM, provided core collaboration hours of 10:00 AM to 4:00 PM are maintained. Flexible arrangements must be approved by the employee's direct manager.
+
+3.3 Remote Work Policy
+Employees may work remotely up to 3 days per week. Fully remote arrangements require VP-level approval and are evaluated on a role-by-role basis. Remote employees must remain reachable during core hours and attend mandatory in-person events (quarterly all-hands, team offsites).
+
+3.4 Overtime
+Non-exempt employees who work beyond 40 hours per week are eligible for overtime pay at 1.5x the standard hourly rate, subject to prior manager authorization. Exempt employees (most engineering, product, and management roles) are not eligible for overtime pay but may accrue compensatory time off for exceptional circumstances such as production incidents.
+
+4. BENEFITS
+
+4.1 Health Insurance
+The Company provides comprehensive health insurance covering medical, dental, and vision for employees and their immediate dependents, with premiums fully covered by the Company for the employee and 50% covered for dependents.
+
+4.2 Retirement Plan
+Employees are enrolled in the Company retirement plan after 90 days of employment. The Company matches employee contributions up to 4% of base salary.
+
+4.3 Wellness Program
+Employees receive an annual wellness stipend of $500 for gym memberships, fitness equipment, or mental health services. The Company also provides free access to a confidential Employee Assistance Program (EAP).
+
+4.4 Learning and Development Stipend
+Each employee receives an annual $1,200 learning stipend for courses, certifications, conferences, or books relevant to their role, subject to manager approval.
+
+4.5 Equipment
+The Company provides a laptop and necessary peripherals for all employees. A one-time $300 home office setup allowance is available for remote and hybrid employees.
+
+5. CODE OF CONDUCT
+
+5.1 Professionalism
+Employees are expected to conduct themselves with honesty, integrity, and respect toward colleagues, customers, and partners at all times.
+
+5.2 Anti-Harassment and Non-Discrimination
+Brightwave Technologies maintains a zero-tolerance policy toward harassment, discrimination, or retaliation of any kind based on race, gender, age, religion, disability, sexual orientation, or any other protected characteristic. Complaints can be filed confidentially through HR or the anonymous ethics hotline.
+
+5.3 Conflict of Interest
+Employees must disclose any outside business activities, financial interests, or relationships that could conflict with the Company's interests. This includes secondary employment, consulting, or significant investments in competitors, customers, or vendors.
+
+5.4 Confidentiality
+Employees must protect confidential Company information, including proprietary source code, customer data, financial results, and strategic plans, both during and after employment. Unauthorized disclosure may result in termination and legal action.
+
+5.5 Disciplinary Process
+Violations of this Code of Conduct are addressed through a progressive discipline process: verbal warning, written warning, final written warning, and termination, except in cases of gross misconduct which may result in immediate termination.
+
+For questions regarding this handbook, contact people-ops@brightwavetech.example.

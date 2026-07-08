@@ -1,0 +1,66 @@
+BRIGHTWAVE TECHNOLOGIES INC.
+COMPANY FINANCE SUMMARY — FISCAL YEAR 2025 (WITH FY2026 TARGETS)
+Document Owner: Finance Department
+Classification: Internal Use Only
+
+1. OVERVIEW
+
+This summary presents Brightwave Technologies' financial performance for fiscal year 2025 and growth targets for fiscal year 2026. Figures are presented in USD and are unaudited internal estimates prepared for internal planning purposes.
+
+2. REVENUE
+
+2.1 Total Revenue
+FY2025 total revenue reached $18.6 million, representing 62% year-over-year growth from $11.5 million in FY2024.
+
+2.2 Revenue by Segment
+- Subscription revenue (SaaS licensing): $15.9 million (85% of total revenue).
+- Professional services (implementation, consulting): $2.1 million (11% of total revenue).
+- Marketplace and partner revenue share: $0.6 million (4% of total revenue).
+
+2.3 Revenue by Customer Tier
+- Enterprise tier: $9.3 million (50%).
+- Professional tier: $6.7 million (36%).
+- Starter tier: $2.6 million (14%).
+
+2.4 Net Revenue Retention
+Net revenue retention (NRR) for FY2025 was 118%, driven primarily by upsells from Professional to Enterprise tier and expanded seat counts among existing customers.
+
+3. EXPENSES
+
+3.1 Total Operating Expenses
+Total operating expenses for FY2025 were $21.3 million, resulting in an operating loss of $2.7 million as the Company continues to invest in growth ahead of profitability.
+
+3.2 Expense Breakdown
+- Research and Development (engineering, product, design): $9.8 million (46% of opex).
+- Sales and Marketing: $6.4 million (30% of opex).
+- General and Administrative: $3.1 million (15% of opex).
+- Cloud infrastructure and hosting costs: $2.0 million (9% of opex).
+
+3.3 Headcount Costs
+Headcount grew from 62 to 94 employees during FY2025. Fully-loaded personnel costs (salary, benefits, payroll tax) account for approximately 71% of total operating expenses.
+
+4. BUDGET ALLOCATION (FY2026)
+
+4.1 Departmental Budget Allocation
+- Engineering and Product: $12.5 million (up 28% from FY2025), reflecting planned headcount growth to support the FY2026 product roadmap, including the Inventory Optimization module and SOC 2 certification effort.
+- Sales and Marketing: $8.9 million (up 39%), funding expansion into the EMEA market and increased enterprise sales capacity.
+- General and Administrative: $3.6 million (up 16%), including costs associated with SOC 2 audit and legal support for multi-region data residency.
+- Cloud Infrastructure: $2.8 million (up 40%), driven by anticipated usage growth and new multi-region deployments.
+
+4.2 Hiring Plan
+The Company plans to grow headcount from 94 to approximately 135 employees in FY2026, with the largest increases in engineering (18 new hires) and sales (12 new hires).
+
+5. GROWTH TARGETS (FY2026)
+
+5.1 Revenue Target
+FY2026 revenue target is $29.5 million, representing approximately 59% year-over-year growth, driven by new enterprise logos, international expansion, and the Inventory Optimization module upsell motion.
+
+5.2 Profitability Target
+The Company targets reaching operating breakeven by Q4 FY2026, driven by improving gross margins (from 74% to a target of 78%) and moderating opex growth relative to revenue growth.
+
+5.3 Key Financial Metrics to Watch
+- Net revenue retention: target of 120% or higher.
+- Customer acquisition cost (CAC) payback period: target reduction from 18 months to 14 months.
+- Gross margin: target improvement to 78%, primarily through cloud cost optimization and infrastructure efficiency work.
+
+This summary is intended for internal planning and executive review. It should not be shared externally without Finance Department approval.
