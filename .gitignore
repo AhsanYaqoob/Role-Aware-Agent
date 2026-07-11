@@ -9,8 +9,8 @@ __pycache__/
 *.py[cod]
 *.egg-info/
 
-# Generated data (rebuilt by ingest.py)
-vectorstore/
+# Source documents (contain sample company content)
+data/
 
 # OS files
 .DS_Store
