@@ -406,7 +406,6 @@
           <table>
             <thead>
               <tr>
-                <th title="Turn number in this conversation">#</th>
                 <th title="Which role agent answered">Agent</th>
                 <th title="Critique verdict on the answer">OK?</th>
                 <th title="Chunks fetched from FAISS this turn">Fetch</th>
@@ -416,7 +415,7 @@
             </thead>
             <tbody id="log-body">
               <tr class="activity-log-empty-row">
-                <td colspan="6" class="activity-log-empty">No activity yet — ask a question to see the pipeline in action.</td>
+                <td colspan="5" class="activity-log-empty">No activity yet — ask a question to see the pipeline in action.</td>
               </tr>
             </tbody>
           </table>
@@ -483,7 +482,6 @@
         : 'No issues flagged by the critique step';
 
       tr.innerHTML =
-        '<td>' + diag.query_count + '</td>' +
         '<td>' + diag.role + '</td>' +
         '<td class="' + (isBad ? 'verdict-bad' : 'verdict-good') + '">' + (isBad ? 'Bad' : 'Good') + '</td>' +
         '<td>' + diag.fetched_count + '</td>' +
