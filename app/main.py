@@ -18,5 +18,12 @@ async def index(request: Request):
 
 @app.post("/ask")
 async def ask(question: str = Form(...), role: str = Form(...)):
-    answer = run_graph(question, role)
-    return JSONResponse({"answer": answer})
+    result = run_graph(question, role)
+    print(
+        f"[activity] turn={result['query_count']} role={result['role']} "
+        f"verdict={result['verdict'] or 'good'} fetched={result['fetched_count']} "
+        f"matched={result['match_count']} "
+        f"rerank={'deep' if result['deep_rerank'] else 'normal'} "
+        f"retries={result['retry_count']}"
+    )
+    return JSONResponse(result)

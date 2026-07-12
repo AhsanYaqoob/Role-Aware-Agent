@@ -76,6 +76,9 @@ class AgentState(TypedDict):
     retry_count: int
     feedback: str
     verdict: str
+    deep_rerank: bool
+    fetched_count: int
+    match_count: int
 
 
 def _role_key(state: AgentState) -> str:
@@ -101,7 +104,8 @@ def retrieve_node(state: AgentState) -> dict:
         if text not in pool:
             pool.append(text)
 
-    if query_count % RERANK_EVERY_N == 0:
+    deep_rerank = query_count % RERANK_EVERY_N == 0
+    if deep_rerank:
         pool = rerank_texts(question, pool, top_k=POOL_MAX_SIZE)
         context_chunks = pool[:3]
     else:
@@ -114,6 +118,9 @@ def retrieve_node(state: AgentState) -> dict:
         "retry_count": 0,
         "feedback": "",
         "verdict": "",
+        "deep_rerank": deep_rerank,
+        "fetched_count": len(fresh),
+        "match_count": len(context_chunks),
     }
 
 
@@ -203,7 +210,17 @@ checkpointer = MemorySaver()
 graph = builder.compile(checkpointer=checkpointer)
 
 
-def run_graph(question: str, role: str) -> str:
+def run_graph(question: str, role: str) -> dict:
     config = {"configurable": {"thread_id": THREAD_ID}}
     result = graph.invoke({"question": question, "role": role}, config=config)
-    return result["answer"]
+    return {
+        "answer": result["answer"],
+        "role": role,
+        "verdict": result.get("verdict", ""),
+        "feedback": result.get("feedback", ""),
+        "retry_count": result.get("retry_count", 0),
+        "query_count": result.get("query_count", 0),
+        "fetched_count": result.get("fetched_count", 0),
+        "match_count": result.get("match_count", 0),
+        "deep_rerank": result.get("deep_rerank", False),
+    }

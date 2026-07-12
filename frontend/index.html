@@ -37,7 +37,7 @@
 
   /* --- Sidebar (fixed, full height, never scrolls) --- */
   .sidebar {
-    width: 240px;
+    width: 280px;
     flex-shrink: 0;
     height: 100%;
     background: var(--sidebar-bg);
@@ -101,6 +101,60 @@
   .sidebar-spacer {
     flex: 1;
     /* reserved for future use */
+  }
+
+  /* --- Activity log (per-message pipeline diagnostics) --- */
+  .activity-log {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    margin-top: 8px;
+  }
+  .activity-log-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--card-bg);
+  }
+  .activity-log-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+  .activity-log-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 6px; }
+  .activity-log table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.66rem;
+  }
+  .activity-log th {
+    position: sticky;
+    top: 0;
+    background: var(--card-bg);
+    text-align: left;
+    padding: 6px 5px;
+    color: var(--text-muted);
+    font-weight: 600;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+    cursor: help;
+  }
+  .activity-log td {
+    padding: 5px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    white-space: nowrap;
+    color: var(--text);
+  }
+  .activity-log tr:last-child td { border-bottom: none; }
+  .verdict-good { color: var(--success); font-weight: 600; }
+  .verdict-bad { color: var(--error); font-weight: 600; }
+  .rerank-deep { color: var(--accent); font-weight: 600; }
+  .activity-log-empty {
+    padding: 14px 8px;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    text-align: center;
+    white-space: normal;
   }
 
   /* --- Chat panel --- */
@@ -346,7 +400,28 @@
         <option value="Engineer">Engineer</option>
         <option value="Manager">Manager</option>
       </select>
-      <div class="sidebar-spacer"></div>
+      <div class="activity-log">
+        <div class="sidebar-label">Activity Log</div>
+        <div class="activity-log-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th title="Turn number in this conversation">#</th>
+                <th title="Which role agent answered">Agent</th>
+                <th title="Critique verdict on the answer">OK?</th>
+                <th title="Chunks fetched from FAISS this turn">Fetch</th>
+                <th title="Top chunks kept as context">Match</th>
+                <th title="Rerank scope: Normal = this turn's chunks only, Deep = whole pool re-ranked (every 5th question)">Rerank</th>
+              </tr>
+            </thead>
+            <tbody id="log-body">
+              <tr class="activity-log-empty-row">
+                <td colspan="6" class="activity-log-empty">No activity yet — ask a question to see the pipeline in action.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
     <div class="chat-panel">
@@ -393,8 +468,30 @@
     const submitBtn = document.getElementById('submit-btn');
     const messagesEl = document.getElementById('messages');
     const emptyState = document.getElementById('empty-state');
+    const logBody = document.getElementById('log-body');
 
     let busy = false;
+
+    function addLogRow(diag) {
+      const emptyRow = logBody.querySelector('.activity-log-empty-row');
+      if (emptyRow) emptyRow.remove();
+
+      const isBad = diag.verdict === 'bad';
+      const tr = document.createElement('tr');
+      tr.title = diag.feedback
+        ? 'Critique: ' + diag.feedback + (diag.retry_count ? ' (retried ' + diag.retry_count + 'x)' : '')
+        : 'No issues flagged by the critique step';
+
+      tr.innerHTML =
+        '<td>' + diag.query_count + '</td>' +
+        '<td>' + diag.role + '</td>' +
+        '<td class="' + (isBad ? 'verdict-bad' : 'verdict-good') + '">' + (isBad ? 'Bad' : 'Good') + '</td>' +
+        '<td>' + diag.fetched_count + '</td>' +
+        '<td>' + diag.match_count + '</td>' +
+        '<td class="' + (diag.deep_rerank ? 'rerank-deep' : '') + '">' + (diag.deep_rerank ? 'Deep' : 'Normal') + '</td>';
+
+      logBody.insertBefore(tr, logBody.firstChild);
+    }
 
     function autoResize() {
       questionInput.style.height = 'auto';
@@ -524,6 +621,7 @@
 
         const data = await response.json();
         typeAnswer(textEl, data.answer);
+        addLogRow(data);
       } catch (err) {
         badge.textContent = 'Error';
         badge.classList.add('error');
