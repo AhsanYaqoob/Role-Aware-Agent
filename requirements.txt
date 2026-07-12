@@ -6,6 +6,7 @@ faiss-cpu
 fastembed
 fastapi
 uvicorn
+httpx
 python-dotenv
 pypdf
 jinja2

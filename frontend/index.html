@@ -471,10 +471,7 @@
 
     let busy = false;
 
-    function addLogRow(diag) {
-      const emptyRow = logBody.querySelector('.activity-log-empty-row');
-      if (emptyRow) emptyRow.remove();
-
+    function buildLogRow(diag) {
       const isBad = diag.verdict === 'bad';
       const tr = document.createElement('tr');
       tr.title = diag.feedback
@@ -488,7 +485,25 @@
         '<td>' + diag.match_count + '</td>' +
         '<td class="' + (diag.deep_rerank ? 'rerank-deep' : '') + '">' + (diag.deep_rerank ? 'Deep' : 'Normal') + '</td>';
 
-      logBody.insertBefore(tr, logBody.firstChild);
+      return tr;
+    }
+
+    function addLogRow(diag) {
+      const emptyRow = logBody.querySelector('.activity-log-empty-row');
+      if (emptyRow) emptyRow.remove();
+      logBody.insertBefore(buildLogRow(diag), logBody.firstChild);
+    }
+
+    function renderActivityRows(rows) {
+      logBody.innerHTML = '';
+      if (!rows || rows.length === 0) {
+        const tr = document.createElement('tr');
+        tr.className = 'activity-log-empty-row';
+        tr.innerHTML = '<td colspan="5" class="activity-log-empty">No activity yet — ask a question to see the pipeline in action.</td>';
+        logBody.appendChild(tr);
+        return;
+      }
+      rows.forEach((diag) => logBody.appendChild(buildLogRow(diag)));
     }
 
     function autoResize() {
@@ -619,7 +634,11 @@
 
         const data = await response.json();
         typeAnswer(textEl, data.answer);
-        addLogRow(data);
+        if (data.activity_rows && data.activity_rows.length > 0) {
+          renderActivityRows(data.activity_rows);
+        } else {
+          addLogRow(data);
+        }
       } catch (err) {
         badge.textContent = 'Error';
         badge.classList.add('error');
