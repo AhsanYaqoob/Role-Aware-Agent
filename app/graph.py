@@ -16,6 +16,7 @@ load_dotenv()
 RERANK_EVERY_N = 5
 POOL_MAX_SIZE = 15
 MAX_RETRIES = 2
+MAX_HISTORY_TURNS = 6
 THREAD_ID = "default-conversation"
 CONNECTION_RETRY_ATTEMPTS = 3
 CONNECTION_RETRY_BASE_DELAY = 1.0
@@ -79,6 +80,7 @@ class AgentState(TypedDict):
     deep_rerank: bool
     fetched_count: int
     match_count: int
+    history: list
 
 
 def _role_key(state: AgentState) -> str:
@@ -128,9 +130,25 @@ def route_by_role(state: AgentState) -> str:
     return _role_key(state)
 
 
+def _format_history(history: list) -> str:
+    if not history:
+        return ""
+    turns = "\n\n".join(
+        f"Q: {h['question']}\nA (answered for the {h.get('role', 'unknown')} role): {h['answer']}"
+        for h in history
+    )
+    return (
+        f"Earlier in this conversation:\n{turns}\n\n"
+        "Note: earlier answers may have been written for a different role than the current "
+        "one -- use them only for factual context, and still answer in your own role's style below.\n\n"
+        "Now the user asks: "
+    )
+
+
 def _make_role_node(role: str):
     def node(state: AgentState) -> dict:
-        prompt = get_prompt(role).format(context=state["context"], question=state["question"])
+        question_with_history = _format_history(state.get("history") or []) + state["question"]
+        prompt = get_prompt(role).format(context=state["context"], question=question_with_history)
         if state.get("feedback"):
             prompt += (
                 f"\n\nYour previous attempt had this issue: {state['feedback']}. "
@@ -168,7 +186,19 @@ def critique_node(state: AgentState) -> dict:
     if verdict == "bad":
         retry_count += 1
 
-    return {"verdict": verdict, "feedback": reason, "retry_count": retry_count}
+    updates = {"verdict": verdict, "feedback": reason, "retry_count": retry_count}
+
+    is_final = verdict == "good" or retry_count > MAX_RETRIES
+    if is_final:
+        history = list(state.get("history") or [])
+        history.append({
+            "question": state["question"],
+            "answer": state["answer"],
+            "role": state["role"],
+        })
+        updates["history"] = history[-MAX_HISTORY_TURNS:]
+
+    return updates
 
 
 def route_after_critique(state: AgentState) -> str:
