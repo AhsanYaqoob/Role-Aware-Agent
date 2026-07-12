@@ -4,8 +4,9 @@ import glob
 from dotenv import load_dotenv
 from langchain_community.document_loaders import TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
+
+from app.embeddings import FastEmbedEmbeddings
 
 load_dotenv()
 
@@ -40,7 +41,7 @@ def main():
     print(f"Created {len(chunks)} chunk(s).")
 
     print(f"Embedding chunks with {EMBEDDING_MODEL} ...")
-    embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
+    embeddings = FastEmbedEmbeddings(EMBEDDING_MODEL)
 
     print("Building FAISS index and saving to vectorstore/ ...")
     vectorstore = FAISS.from_documents(chunks, embeddings)
