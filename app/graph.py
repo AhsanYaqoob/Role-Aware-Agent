@@ -80,6 +80,7 @@ class AgentState(TypedDict):
     deep_rerank: bool
     fetched_count: int
     match_count: int
+    pool_size: int
     history: list
 
 
@@ -107,6 +108,7 @@ def retrieve_node(state: AgentState) -> dict:
             pool.append(text)
 
     deep_rerank = query_count % RERANK_EVERY_N == 0
+    pool_size_before_prune = len(pool)
     if deep_rerank:
         pool = rerank_texts(question, pool, top_k=POOL_MAX_SIZE)
         context_chunks = pool[:3]
@@ -123,6 +125,7 @@ def retrieve_node(state: AgentState) -> dict:
         "deep_rerank": deep_rerank,
         "fetched_count": len(fresh),
         "match_count": len(context_chunks),
+        "pool_size": pool_size_before_prune,
     }
 
 
@@ -253,4 +256,5 @@ def run_graph(question: str, role: str) -> dict:
         "fetched_count": result.get("fetched_count", 0),
         "match_count": result.get("match_count", 0),
         "deep_rerank": result.get("deep_rerank", False),
+        "pool_size": result.get("pool_size", 0),
     }
