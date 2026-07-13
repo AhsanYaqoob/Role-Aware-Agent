@@ -219,6 +219,29 @@
     max-width: 100%;
     width: 100%;
   }
+  .rerank-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    width: 100%;
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 10px 14px;
+    background: rgba(79, 140, 255, 0.08);
+    border: 1px solid rgba(79, 140, 255, 0.3);
+    border-radius: 10px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+  .rerank-banner svg {
+    flex-shrink: 0;
+    color: var(--accent);
+    margin-top: 2px;
+  }
+  .rerank-banner strong {
+    color: var(--accent);
+  }
   .answer-role {
     display: inline-block;
     font-size: 0.72rem;
@@ -575,7 +598,24 @@
       row.appendChild(bubble);
       messagesEl.appendChild(row);
       scrollToBottom();
-      return { badge, textEl };
+      return { row, badge, textEl };
+    }
+
+    function insertRerankBanner(beforeRow, poolSize) {
+      const banner = document.createElement('div');
+      banner.className = 'rerank-banner';
+      banner.innerHTML =
+        '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+        '<polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline>' +
+        '<path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>' +
+        '</svg>' +
+        '<div><strong>Deep rerank triggered.</strong> Every 5th question, the system re-scores the ' +
+        'entire pool of ' + poolSize + ' chunks retrieved so far in this conversation — not just this ' +
+        "turn's — against the current question, instead of only reranking what was just fetched. " +
+        'This keeps long conversations accurate without unbounded context growth, a step many ' +
+        'simpler RAG systems skip entirely, causing them to slow down or drift over time.</div>';
+      messagesEl.insertBefore(banner, beforeRow);
+      scrollToBottom();
     }
 
     function escapeHtml(text) {
@@ -616,7 +656,7 @@
 
       busy = true;
       submitBtn.disabled = true;
-      const { badge, textEl } = addAssistantPlaceholder(role);
+      const { row, badge, textEl } = addAssistantPlaceholder(role);
 
       try {
         const formData = new FormData();
@@ -633,6 +673,9 @@
         }
 
         const data = await response.json();
+        if (data.deep_rerank) {
+          insertRerankBanner(row, data.pool_size);
+        }
         typeAnswer(textEl, data.answer);
         if (data.activity_rows && data.activity_rows.length > 0) {
           renderActivityRows(data.activity_rows);
