@@ -9,7 +9,7 @@ from langgraph.graph import StateGraph, START, END
 from langgraph.checkpoint.memory import MemorySaver
 
 from app.prompts import get_prompt
-from app.retriever import get_candidate_texts, rerank_texts
+from app.retriever import get_candidate_documents, rerank_documents, format_context
 
 load_dotenv()
 
@@ -102,21 +102,21 @@ def retrieve_node(state: AgentState) -> dict:
     query_count = state.get("query_count", 0) + 1
     pool = list(state.get("chunk_pool") or [])
 
-    fresh = get_candidate_texts(question, k=10)
-    for text in fresh:
-        if text not in pool:
-            pool.append(text)
+    fresh = get_candidate_documents(question, k=10)
+    for doc in fresh:
+        if doc not in pool:
+            pool.append(doc)
 
     deep_rerank = query_count % RERANK_EVERY_N == 0
     pool_size_before_prune = len(pool)
     if deep_rerank:
-        pool = rerank_texts(question, pool, top_k=POOL_MAX_SIZE)
-        context_chunks = pool[:3]
+        pool = rerank_documents(question, pool, top_k=POOL_MAX_SIZE)
+        context_docs = pool[:3]
     else:
-        context_chunks = rerank_texts(question, fresh, top_k=3)
+        context_docs = rerank_documents(question, fresh, top_k=3)
 
     return {
-        "context": "\n\n".join(context_chunks),
+        "context": format_context(context_docs),
         "chunk_pool": pool,
         "query_count": query_count,
         "retry_count": 0,
@@ -124,7 +124,7 @@ def retrieve_node(state: AgentState) -> dict:
         "verdict": "",
         "deep_rerank": deep_rerank,
         "fetched_count": len(fresh),
-        "match_count": len(context_chunks),
+        "match_count": len(context_docs),
         "pool_size": pool_size_before_prune,
     }
 

@@ -4,6 +4,7 @@ langchain-groq
 langchain-community
 faiss-cpu
 fastembed
+rank_bm25
 fastapi
 uvicorn
 httpx

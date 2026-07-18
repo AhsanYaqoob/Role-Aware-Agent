@@ -14,7 +14,9 @@
       "Read(//c/Users/AHSAN/AppData/Local/Temp/claude/D--My-Folder-Projects-role-aware-agent/a49b41dd-a2b8-467b-b963-e9d67760f231/scratchpad/**)",
       "Bash(node drive_ui3.js)",
       "Bash(/d/My Folder/Projects/role-aware-agent/venv/Scripts/python.exe *)",
-      "Bash(curl -s -o /dev/null -w \"HTTP status: %{http_code}\\\\n\" --max-time 5 http://127.0.0.1:8000/)"
+      "Bash(curl -s -o /dev/null -w \"HTTP status: %{http_code}\\\\n\" --max-time 5 http://127.0.0.1:8000/)",
+      "Bash(rm -f vectorstore/index.faiss vectorstore/index.pkl vectorstore/chunks.pkl)",
+      "Bash(./venv/Scripts/python.exe ingest.py)"
     ]
   }
 }
