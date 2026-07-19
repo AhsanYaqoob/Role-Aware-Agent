@@ -549,12 +549,6 @@
       return tr;
     }
 
-    function addLogRow(diag) {
-      const emptyRow = logBody.querySelector('.activity-log-empty-row');
-      if (emptyRow) emptyRow.remove();
-      logBody.insertBefore(buildLogRow(diag), logBody.firstChild);
-    }
-
     function renderActivityRows(rows) {
       logBody.innerHTML = '';
       if (!rows || rows.length === 0) {
@@ -565,6 +559,43 @@
         return;
       }
       rows.forEach((diag) => logBody.appendChild(buildLogRow(diag)));
+    }
+
+    // Accumulates every row ever seen in this browser session so it never
+    // shrinks. Each /ask response's activity_rows = [this turn's row] +
+    // [Render's log history at that moment] -- but Render has real
+    // ingestion lag, so recently-asked turns are often still missing from
+    // that history for a request or two. Replacing the table wholesale with
+    // each response would make already-shown rows vanish; merging instead
+    // guarantees nothing shown is ever lost, while still folding in genuine
+    // Render-sourced history as it becomes available.
+    let sessionRows = [];
+
+    function activityRowKey(row) {
+      return [row.query_count, row.role, row.verdict, row.fetched_count, row.match_count, row.deep_rerank, row.retry_count].join('|');
+    }
+
+    function mergeActivityRows(rows) {
+      if (!rows || rows.length === 0) return;
+
+      const existingKeys = new Set(sessionRows.map(activityRowKey));
+      const [current, ...history] = rows;
+
+      const currentKey = activityRowKey(current);
+      if (!existingKeys.has(currentKey)) {
+        sessionRows.unshift(current);
+        existingKeys.add(currentKey);
+      }
+
+      history.forEach((row) => {
+        const key = activityRowKey(row);
+        if (!existingKeys.has(key)) {
+          sessionRows.push(row);
+          existingKeys.add(key);
+        }
+      });
+
+      renderActivityRows(sessionRows);
     }
 
     function autoResize() {
@@ -739,11 +770,7 @@
           insertRerankBanner(row);
         }
         typeAnswer(textEl, data.answer);
-        if (data.activity_rows && data.activity_rows.length > 0) {
-          renderActivityRows(data.activity_rows);
-        } else {
-          addLogRow(data);
-        }
+        mergeActivityRows(data.activity_rows && data.activity_rows.length > 0 ? data.activity_rows : [data]);
       } catch (err) {
         badge.textContent = 'Error';
         badge.classList.add('error');

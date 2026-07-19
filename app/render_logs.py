@@ -1,11 +1,14 @@
 import os
 import re
 import time
+from datetime import datetime, timedelta, timezone
 
 import httpx
 from dotenv import load_dotenv
 
 load_dotenv()
+
+ACTIVITY_WINDOW = timedelta(hours=1)
 
 RENDER_API_KEY = os.getenv("RENDER_API_KEY", "")
 RENDER_SERVICE_ID = os.getenv("RENDER_SERVICE_ID", "")
@@ -80,6 +83,8 @@ async def fetch_activity_rows(limit: int = 20) -> list[dict]:
     try:
         async with httpx.AsyncClient(timeout=10) as client:
             service_id, owner_id = await _resolve_service(client)
+            now_utc = datetime.now(timezone.utc)
+            cutoff = now_utc - ACTIVITY_WINDOW
             resp = await client.get(
                 f"{RENDER_API_BASE}/logs",
                 headers={"Authorization": f"Bearer {RENDER_API_KEY}"},
@@ -89,6 +94,8 @@ async def fetch_activity_rows(limit: int = 20) -> list[dict]:
                     "text": ["[activity]"],
                     "limit": limit,
                     "direction": "backward",
+                    "startTime": cutoff.isoformat(),
+                    "endTime": now_utc.isoformat(),
                 },
             )
             resp.raise_for_status()
@@ -101,12 +108,22 @@ async def fetch_activity_rows(limit: int = 20) -> list[dict]:
                 match = _ACTIVITY_LINE_RE.search(_strip_ansi(message))
                 if not match:
                     continue
+
+                timestamp = entry.get("timestamp", "") if isinstance(entry, dict) else ""
+                # Belt-and-suspenders: also filter client-side in case the API's
+                # startTime/endTime aren't strictly honored for a text-filtered
+                # query (observed inconsistent behavior in testing).
+                try:
+                    if timestamp and datetime.fromisoformat(timestamp) < cutoff:
+                        continue
+                except ValueError:
+                    pass
+
                 turn, role, verdict, fetched, matched, rerank, retries = match.groups()
                 # "turn" (query_count) resets to 1 on every server restart, so it
                 # is NOT reliable for ordering across restarts -- an old session's
                 # turn=6 can be chronologically older than a fresh session's
                 # turn=1. Render's own log timestamp is the real clock.
-                timestamp = entry.get("timestamp", "") if isinstance(entry, dict) else ""
                 rows.append({
                     "query_count": int(turn),
                     "role": role,
