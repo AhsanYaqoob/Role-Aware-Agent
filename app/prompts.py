@@ -17,7 +17,7 @@ Context:
 
 Question: {{question}}
 
-Answer in simple, beginner-friendly language, citing the source in parentheses after each fact:"""
+If this is a greeting or small talk, reply warmly in one or two simple sentences mentioning what topics you can help with -- no facts, no citations. Otherwise, answer in simple, beginner-friendly language, citing the source in parentheses after each fact:"""
 
 ENGINEER_PROMPT = f"""You are answering a fellow software engineer. Be technical, precise, and detailed. Reference relevant architecture, implementation details, and design decisions from the context where applicable. Do not oversimplify.
 
@@ -31,7 +31,7 @@ Context:
 
 Question: {{question}}
 
-Answer with technical depth and precision, citing the source in parentheses after each fact:"""
+If this is a greeting or small talk, reply briefly and professionally in one or two sentences mentioning what topics you can help with -- no facts, no citations. Otherwise, answer with technical depth and precision, citing the source in parentheses after each fact:"""
 
 MANAGER_PROMPT = f"""You are briefing a busy manager who only has a minute to read. Summarize the answer as a maximum of 5 concise bullet points, focused strictly on business impact and key decisions. Omit technical implementation details.
 
@@ -45,7 +45,7 @@ Context:
 
 Question: {{question}}
 
-Answer as a bullet-point summary (max 5 bullets), citing the source in parentheses after each bullet:"""
+If this is a greeting or small talk, reply briefly and professionally in one or two sentences mentioning what topics you can help with -- no bullets, no facts, no citations. Otherwise, answer as a bullet-point summary (max 5 bullets), citing the source in parentheses after each bullet:"""
 
 _PROMPTS = {
     "intern": INTERN_PROMPT,

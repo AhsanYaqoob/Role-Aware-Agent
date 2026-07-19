@@ -102,6 +102,11 @@ async def fetch_activity_rows(limit: int = 20) -> list[dict]:
                 if not match:
                     continue
                 turn, role, verdict, fetched, matched, rerank, retries = match.groups()
+                # "turn" (query_count) resets to 1 on every server restart, so it
+                # is NOT reliable for ordering across restarts -- an old session's
+                # turn=6 can be chronologically older than a fresh session's
+                # turn=1. Render's own log timestamp is the real clock.
+                timestamp = entry.get("timestamp", "") if isinstance(entry, dict) else ""
                 rows.append({
                     "query_count": int(turn),
                     "role": role,
@@ -111,8 +116,13 @@ async def fetch_activity_rows(limit: int = 20) -> list[dict]:
                     "deep_rerank": rerank == "deep",
                     "retry_count": int(retries),
                     "feedback": "",
+                    "_timestamp": timestamp,
                 })
 
+            # ISO 8601 timestamps sort correctly as plain strings.
+            rows.sort(key=lambda r: r["_timestamp"], reverse=True)
+            for row in rows:
+                del row["_timestamp"]
             _rows_cache.update(data=rows, fetched_at=now)
             return rows
     except Exception:

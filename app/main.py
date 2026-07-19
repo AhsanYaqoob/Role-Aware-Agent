@@ -35,5 +35,26 @@ async def ask(question: str = Form(...), role: str = Form(...)):
         f"rerank={'deep' if result['deep_rerank'] else 'normal'} "
         f"retries={result['retry_count']}"
     )
-    result["activity_rows"] = await fetch_activity_rows()
+
+    current_row = {
+        "query_count": result["query_count"],
+        "role": result["role"],
+        "verdict": result["verdict"] or "good",
+        "fetched_count": result["fetched_count"],
+        "match_count": result["match_count"],
+        "deep_rerank": result["deep_rerank"],
+        "retry_count": result["retry_count"],
+        "feedback": result["feedback"],
+    }
+
+    # Render's log search has real ingestion lag -- the line we just printed
+    # above usually isn't searchable yet by the time we'd query it here, so
+    # this turn's own row would be missing from the table for one full
+    # request. Show it immediately from data we already computed, and let
+    # Render's log history (fetched below) fill in everything before it.
+    history_rows = await fetch_activity_rows()
+    if history_rows and history_rows[0]["query_count"] == current_row["query_count"] and history_rows[0]["role"] == current_row["role"]:
+        history_rows = history_rows[1:]  # Render already ingested this turn -- don't show it twice
+    result["activity_rows"] = [current_row] + history_rows
+
     return JSONResponse(result)

@@ -202,9 +202,10 @@
   .message-row.assistant { justify-content: flex-start; }
 
   .message-bubble.user {
+    position: relative;
     background: var(--accent);
     color: white;
-    padding: 11px 16px;
+    padding: 11px 34px 11px 16px;
     border-radius: 18px 18px 4px 18px;
     max-width: 75%;
     white-space: pre-wrap;
@@ -212,32 +213,69 @@
     font-size: 0.95rem;
   }
   .message-bubble.assistant {
+    position: relative;
     background: var(--bubble-assistant);
     border: 1px solid var(--border);
-    padding: 14px 16px;
+    padding: 14px 34px 14px 16px;
     border-radius: 4px 18px 18px 18px;
     max-width: 100%;
     width: 100%;
   }
+  .copy-btn {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.15);
+    color: inherit;
+    opacity: 0;
+    cursor: pointer;
+    transition: opacity 0.15s ease, background 0.15s ease;
+  }
+  .message-bubble.assistant .copy-btn {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-muted);
+  }
+  .message-bubble:hover .copy-btn {
+    opacity: 1;
+  }
+  .copy-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+  .message-bubble.assistant .copy-btn:hover {
+    color: var(--text);
+  }
+  .copy-btn.copied {
+    color: var(--success) !important;
+  }
+  .copy-btn svg {
+    width: 13px;
+    height: 13px;
+  }
   .rerank-banner {
     display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    width: 100%;
+    align-items: center;
+    gap: 8px;
     max-width: 760px;
     margin: 0 auto;
-    padding: 10px 14px;
+    padding: 6px 12px;
     background: rgba(79, 140, 255, 0.08);
     border: 1px solid rgba(79, 140, 255, 0.3);
-    border-radius: 10px;
-    font-size: 0.8rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
     color: var(--text-muted);
-    line-height: 1.5;
+    align-self: flex-start;
   }
   .rerank-banner svg {
     flex-shrink: 0;
     color: var(--accent);
-    margin-top: 2px;
   }
   .rerank-banner strong {
     color: var(--accent);
@@ -567,6 +605,32 @@
       }
     }
 
+    const COPY_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+    const CHECK_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+
+    function createCopyButton(getText) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'copy-btn';
+      btn.setAttribute('aria-label', 'Copy message');
+      btn.innerHTML = COPY_ICON;
+      btn.addEventListener('click', async (event) => {
+        event.stopPropagation();
+        try {
+          await navigator.clipboard.writeText(getText());
+          btn.innerHTML = CHECK_ICON;
+          btn.classList.add('copied');
+          setTimeout(() => {
+            btn.innerHTML = COPY_ICON;
+            btn.classList.remove('copied');
+          }, 1200);
+        } catch (err) {
+          // clipboard access unavailable; fail silently
+        }
+      });
+      return btn;
+    }
+
     function addUserMessage(text) {
       showChatView();
       const row = document.createElement('div');
@@ -574,6 +638,7 @@
       const bubble = document.createElement('div');
       bubble.className = 'message-bubble user';
       bubble.textContent = text;
+      bubble.appendChild(createCopyButton(() => text));
       row.appendChild(bubble);
       messagesEl.appendChild(row);
       scrollToBottom();
@@ -595,13 +660,14 @@
 
       bubble.appendChild(badge);
       bubble.appendChild(textEl);
+      bubble.appendChild(createCopyButton(() => textEl.textContent));
       row.appendChild(bubble);
       messagesEl.appendChild(row);
       scrollToBottom();
       return { row, badge, textEl };
     }
 
-    function insertRerankBanner(beforeRow, poolSize) {
+    function insertRerankBanner(beforeRow) {
       const banner = document.createElement('div');
       banner.className = 'rerank-banner';
       banner.innerHTML =
@@ -609,11 +675,7 @@
         '<polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline>' +
         '<path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>' +
         '</svg>' +
-        '<div><strong>Deep rerank triggered.</strong> Every 5th question, the system re-scores the ' +
-        'entire pool of ' + poolSize + ' chunks retrieved so far in this conversation — not just this ' +
-        "turn's — against the current question, instead of only reranking what was just fetched. " +
-        'This keeps long conversations accurate without unbounded context growth, a step many ' +
-        'simpler RAG systems skip entirely, causing them to slow down or drift over time.</div>';
+        '<div><strong>Deep</strong></div>';
       messagesEl.insertBefore(banner, beforeRow);
       scrollToBottom();
     }
@@ -674,7 +736,7 @@
 
         const data = await response.json();
         if (data.deep_rerank) {
-          insertRerankBanner(row, data.pool_size);
+          insertRerankBanner(row);
         }
         typeAnswer(textEl, data.answer);
         if (data.activity_rows && data.activity_rows.length > 0) {
