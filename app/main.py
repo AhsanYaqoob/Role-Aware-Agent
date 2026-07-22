@@ -1,10 +1,20 @@
+import asyncio
+import json
+
 from dotenv import load_dotenv
 from fastapi import FastAPI, Form, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 
 from app.graph import run_graph
 from app.render_logs import fetch_activity_rows
+
+# How often to send a heartbeat line while the graph is running. Some
+# intermediaries between browser and server (home routers, corporate
+# firewalls) will silently kill a TCP connection that carries zero bytes
+# for too long, even though Render's own proxy allows responses to take
+# much longer than that. A trickle of bytes keeps those idle timers reset.
+HEARTBEAT_SECONDS = 8
 
 load_dotenv()
 
@@ -25,9 +35,17 @@ async def chrome_devtools_probe():
     return JSONResponse({})
 
 
-@app.post("/ask")
-async def ask(question: str = Form(...), role: str = Form(...)):
-    result = run_graph(question, role)
+async def _ask_stream(question: str, role: str):
+    loop = asyncio.get_event_loop()
+    task = loop.run_in_executor(None, run_graph, question, role)
+
+    while True:
+        done, _ = await asyncio.wait({task}, timeout=HEARTBEAT_SECONDS)
+        if done:
+            break
+        yield json.dumps({"type": "heartbeat"}) + "\n"
+
+    result = task.result()
     print(
         f"[activity] turn={result['query_count']} role={result['role']} "
         f"verdict={result['verdict'] or 'good'} fetched={result['fetched_count']} "
@@ -57,4 +75,9 @@ async def ask(question: str = Form(...), role: str = Form(...)):
         history_rows = history_rows[1:]  # Render already ingested this turn -- don't show it twice
     result["activity_rows"] = [current_row] + history_rows
 
-    return JSONResponse(result)
+    yield json.dumps({"type": "result", **result}) + "\n"
+
+
+@app.post("/ask")
+async def ask(question: str = Form(...), role: str = Form(...)):
+    return StreamingResponse(_ask_stream(question, role), media_type="application/x-ndjson")

@@ -765,7 +765,28 @@
           throw new Error('Server responded with status ' + response.status);
         }
 
-        const data = await response.json();
+        // The backend streams newline-delimited JSON: periodic
+        // {"type": "heartbeat"} lines while it works (so the connection
+        // never sits fully idle on a slow turn), then one final
+        // {"type": "result", ...} line with the real payload.
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        let data = null;
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop();
+          for (const line of lines) {
+            if (!line.trim()) continue;
+            const parsed = JSON.parse(line);
+            if (parsed.type === 'result') data = parsed;
+          }
+        }
+        if (!data) throw new Error('No response received from server');
+
         if (data.deep_rerank) {
           insertRerankBanner(row);
         }
